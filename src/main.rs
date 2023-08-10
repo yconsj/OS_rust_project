@@ -1,4 +1,4 @@
-// https://os.phil-opp.com/minimal-rust-kernel/ -// TIMEOUTS
+// https://os.phil-opp.com/
 #![no_std] // don't link the Rust standard library
 #![no_main] // disable all Rust-level entry points
 #![feature(custom_test_frameworks)]
@@ -27,8 +27,17 @@ pub extern "C" fn _start() -> ! {
 
     println!("Hello World {}", "!");
 
+    //init interrupts
+    os_rust_project::init();
+
+    //invoke a breakpoint exception
+    x86_64::instructions::interrupts::int3();
+
     #[cfg(test)]
     test_main();
+
+    println!("I did not crash!");
+
     // Loop to never end
     loop {}
 }

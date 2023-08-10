@@ -2,10 +2,16 @@
 #![no_std]
 #![feature(custom_test_frameworks)]
 #![test_runner(crate::test_runner)]
+#![feature(abi_x86_interrupt)]
 #![reexport_test_harness_main = "test_main"]
 use core::panic::PanicInfo;
+pub mod interrupts;
 pub mod serial;
 pub mod vga_buffer;
+
+pub fn init() {
+    interrupts::init_idt();
+}
 
 pub enum QemuExitCode {
     Success = 0x10,
@@ -54,6 +60,7 @@ pub fn test_panic_handler(info: &PanicInfo) -> ! {
 #[cfg(test)]
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
+    init();
     test_main();
     loop {}
 }
@@ -62,4 +69,10 @@ pub extern "C" fn _start() -> ! {
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     test_panic_handler(info)
+}
+
+#[test_case]
+fn test_breakpoint_exception() {
+    // invoke a breakpoint exception
+    x86_64::instructions::interrupts::int3();
 }
