@@ -5,11 +5,13 @@
 #![feature(abi_x86_interrupt)]
 #![reexport_test_harness_main = "test_main"]
 use core::panic::PanicInfo;
+pub mod gdt;
 pub mod interrupts;
 pub mod serial;
 pub mod vga_buffer;
 
 pub fn init() {
+    gdt::init();
     interrupts::init_idt();
 }
 
