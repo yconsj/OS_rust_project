@@ -12,8 +12,9 @@ use os_rust_project::println;
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
-    loop {}
+    os_rust_project::hlt_loop();
 }
+
 #[cfg(test)]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
@@ -30,18 +31,9 @@ pub extern "C" fn _start() -> ! {
     //init interrupts
     os_rust_project::init();
 
-    fn stack_overflow() {
-        stack_overflow(); // for each recursion, the return address is pushed
-    }
-
-    // trigger a stack overflow
-    stack_overflow();
-
     #[cfg(test)]
     test_main();
 
     println!("I did not crash!");
-
-    // Loop to never end
-    loop {}
+    os_rust_project::hlt_loop();
 }
