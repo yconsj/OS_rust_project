@@ -1,10 +1,11 @@
 use crate::gdt;
+use crate::hlt_loop;
 use crate::print;
 use crate::println;
 use lazy_static::lazy_static;
 use pic8259::ChainedPics;
 use spin;
-use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
+use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame, PageFaultErrorCode};
 
 pub const PIC_1_OFFSET: u8 = 32;
 pub const PIC_2_OFFSET: u8 = PIC_1_OFFSET + 8;
@@ -40,13 +41,26 @@ lazy_static! {
 
         idt[InterruptIndex::Timer.as_usize()].set_handler_fn(timer_interrupt_handler);
         idt[InterruptIndex::Keyboard.as_usize()].set_handler_fn(keyboard_interrupt_handler);
+        idt.page_fault.set_handler_fn(page_fault_handler);
         idt
     };
 }
 pub fn init_idt() {
     IDT.load();
 }
+// page fault handler
+extern "x86-interrupt" fn page_fault_handler(
+    _stack_frame: InterruptStackFrame,
+    _error_code: PageFaultErrorCode,
+) {
+    use x86_64::registers::control::Cr2;
 
+    println!("EXCEPTION: PAGE FAULT");
+    println!("Accessed Address: {:?}", Cr2::read());
+    println!("Error Code: {:?}", _error_code);
+    println!("{:#?}", _stack_frame);
+    hlt_loop();
+}
 //keyboard
 extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: InterruptStackFrame) {
     use pc_keyboard::{layouts, DecodedKey, HandleControl, Keyboard, ScancodeSet1};
